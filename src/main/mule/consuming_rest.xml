@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a6cc8a70-704e-4a40-a8df-e00941bae77c" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="f4ca788d-5fa6-4a90-9ca3-4b2409950bb2" >
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+	<flow name="consuming_restFlow" doc:id="7add06d0-8df7-4804-b276-371507f47f35" >
+		<http:listener doc:name="Listener" doc:id="7f43c1d3-9c51-4097-863a-40e7174906f1" config-ref="HTTP_Listener_config" path="/consumeRest"/>
+		<ee:transform doc:name="Transform Message" doc:id="302649d6-73f2-4312-9a43-0d42235cc42f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json		
+---
+{
+	"customer":{
+		"name":payload.name,
+		"age":payload.age,
+		"city":payload.city
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="936af5cd-9a62-4e43-bd41-423323cbfc8c" message="in the logger"/>
+	</flow>
+	<flow name="consuming_restFlow1" doc:id="0dc7ed05-1947-4a97-8870-f7f0cab96872" >
+		<http:listener doc:name="Listener" doc:id="ccb2ea85-d801-4938-8912-4fa247fbeb39" config-ref="HTTP_Listener_config" path="/consumer"/>
+		<http:request method="POST" doc:name="Request" doc:id="aed466a0-0f8d-4158-9059-ad31b4d1635e" config-ref="HTTP_Request_configuration" path="/consumeRest"/>
+		<logger level="INFO" doc:name="Logger" doc:id="47a2beaf-dc86-4fc1-b146-df0bc649bf1b" />
+		<error-handler>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="cb3cb649-beea-4d3e-ad0c-1a883ff8af39" type="ANY">
+				<logger level="ERROR" doc:name="Logger" doc:id="3ac7b936-0295-43c3-bc35-92937eca2019" message="error in the flow"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>
